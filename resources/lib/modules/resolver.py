@@ -63,10 +63,17 @@ class Resolver:
         scraper = cfscrape.create_scraper()
         download_url = link.replace('kwik.cx/e/', 'kwik.cx/f/')
         kwik_text = scraper.get(download_url, headers={'referer': download_url}).content
-        post_url = re.findall(r'action="(.*?)"', kwik_text)[0]
-        token = re.findall(r'value="(.*?)"', kwik_text)[0]
-        stream_url = scraper.post(post_url, headers={'referer': download_url}, data={'_token': token}, allow_redirects=False).headers['Location']
-        self.resolved_link = stream_url
+        post_url = re.findall(r'action="(.*?)"', kwik_text)
+        token = re.findall(r'value="(.*?)"', kwik_text)
+        if len(post_url) > 0 and len(token) > 0:
+            stream_url = scraper.post(post_url[0], headers={'referer': download_url}, data={'_token': token[0]}, allow_redirects=False).headers['Location']
+            self.resolved_link = stream_url
+        elif len(post_url) == 0:
+            tools.log('Error - No action in kwik scraped url: ' + kwik_text, 'error')
+        elif len(token) == 0:
+            tools.log('Error - No token in kwik scaped url:' + kwik_text, 'error')
+
+
     
     def twist_resolver(self, link):
         #Setup
